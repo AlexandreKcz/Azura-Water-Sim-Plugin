@@ -53,7 +53,7 @@ namespace Azura.WaterSim
 		[Header("Visual")]
 
 		[Tooltip("UV Scale value of the generated water surface mesh")]
-		[SerializeField] private float _uvScale;
+		[SerializeField] private float _uvScale = 2;
 
 		[Header("Optimisation values")]
 
@@ -238,7 +238,7 @@ namespace Azura.WaterSim
 
 		#region Simulation
 
-		private void simulateVertice(int x, int z, float time, Vector3[] vertices)
+		private void simulateVertice	(float time, int x, int z, Vector3[] vertices)
 		{
 			float y = 0f;
 			for (int o = 0; o < _octaves.Length; o++)
@@ -257,24 +257,24 @@ namespace Azura.WaterSim
 			vertices[index(x, z)] = new Vector3(x, y, z);
 		}
 
-		private void simulateChunk(float time, Vector2 observerChunk, Vector3[] vertices)
+		private void simulateChunk		(float time, Vector2 observerChunk, Vector3[] vertices)
 		{
 			for (int x = (int)(observerChunk.x * _chunkSize); x <= (int)(observerChunk.x * _chunkSize) + _chunkSize; x++)
 				for (int z = (int)(observerChunk.y * _chunkSize); z <= (int)(observerChunk.y * _chunkSize) + _chunkSize; z++)
 				{
 					if (_distanceOptimisation && OptimisationHelpers.FlatSqrdDistance(getVerticePos(new Vector2(x, z)), _observerTransform.position) > (_calculationMaxDistance * _calculationMaxDistance)) continue;
-					simulateVertice(x, z, time, vertices); 
+					simulateVertice(time, x, z, vertices); 
 				}
 		}
 
-		private void simulateSurface(float time, Vector3[] vertices)
+		private void simulateSurface	(float time, Vector3[] vertices)
 		{
 			for (int x = 0; x <= _dimension; x++)
 				for (int z = 0; z <= _dimension; z++)
-					simulateVertice(x, z, time, vertices);
+					simulateVertice(time, x, z, vertices);
 		}
 
-		private void simulateChunkBatch(float time, Vector2[] chunks, Vector3[] vertices)
+		private void simulateChunkBatch	(float time, Vector2[] chunks, Vector3[] vertices)
 		{
 			for (int i = 0; i < chunks.Length; i++)
 			{
@@ -284,7 +284,7 @@ namespace Azura.WaterSim
 			}
 		}
 
-		private void simulationUpdate(float time)
+		private void simulationUpdate	(float time)
 		{
 			Vector3[] vertices = _mesh.vertices;
 
