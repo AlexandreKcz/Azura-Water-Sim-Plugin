@@ -82,13 +82,40 @@ namespace Azura.WaterSim
 			GenerateMesh();
 		}
 
-		#region Utils function
+		#region Utils functions
+
+		/// <summary>
+		/// Return vertices index based on x and y coordinates
+		/// </summary>
+		/// <param name="x">x vertice's coordinate</param>
+		/// <param name="z">y vertice's coordinate</param>
+		/// <returns>index of the vertice in the array</returns>
 		private int index(int x, int z) { return x * (_dimension + 1) + z; }
+
+		/// <summary>
+		/// Return vertices index based on x and y coordinates ;
+		/// same as @index(int x, int z) method but with float parameters for convenience
+		/// </summary>
+		/// <param name="x">x vertice's coordinate</param>
+		/// <param name="z">y vertice's coordinate</param>
+		/// <returns>index of the vertice in the array</returns>
 		private int index(float x, float z) { return index((int)x, (int)z); }
+
+		/// <summary>
+		/// Convert flat pos to mesh relative vertices coordinate
+		/// </summary>
+		/// <param name="localPos">a flat space coordinate relative to mesh position</param>
+		/// <returns>vertices position in world space coordinate</returns>
 		private Vector3 getVerticePos(Vector2 localPos)
 		{
 			return transform.position + new Vector3(localPos.x, 0, localPos.y);
 		}
+
+		/// <summary>
+		/// Find a chunk relative to a position in world space
+		/// </summary>
+		/// <param name="localPos">the position used to find the chunk</param>
+		/// <returns>lower left corner of the active chunk</returns>
 		private Vector2 getChunk(Vector3 localPos)
 		{
 			Vector2 pos = new Vector2(localPos.x, localPos.z);
@@ -101,9 +128,14 @@ namespace Azura.WaterSim
 
 			return pos;
 		}
+
 		#endregion
 
 		#region Mesh generation functions
+
+		/// <summary>
+		/// Generate base surface mesh, assign it to renderer and filter, check for potential errors and change index format for very large surface
+		/// </summary>
 		public void GenerateMesh()
 		{
 			_mesh = new Mesh();
@@ -127,6 +159,11 @@ namespace Azura.WaterSim
 			_meshFilter = gameObject.GetComponent<MeshFilter>();
 			_meshFilter.mesh = _mesh;
 		}
+
+		/// <summary>
+		/// Generate mesh vertices based on @_dimension
+		/// </summary>
+		/// <returns>generated vertices</returns>
 		private Vector3[] generateVertices()
 		{
 			Vector3[] verts = new Vector3[(_dimension + 1) * (_dimension + 1)];
@@ -138,6 +175,11 @@ namespace Azura.WaterSim
 			Debug.Log(verts.Length);
 			return verts;
 		}
+
+		/// <summary>
+		/// Generate mesh triangles based on @_mesh.vertices
+		/// </summary>
+		/// <returns>generated triangles</returns>
 		private int[] generateTriangles()
 		{
 			int[] tries = new int[_mesh.vertices.Length * 6];
@@ -157,6 +199,11 @@ namespace Azura.WaterSim
 
 			return tries;
 		}
+
+		/// <summary>
+		/// Generate mesh uvs based on @_dimension and @_mesh.vertices
+		/// </summary>
+		/// <returns>generated uvs</returns>
 		private Vector2[] generateUVs()
 		{
 			Vector2[] uvs = new Vector2[_mesh.vertices.Length];
@@ -171,10 +218,12 @@ namespace Azura.WaterSim
 			}
 
 			return uvs;
-		}
+		} //TODO : make flip UV optional
+
 		#endregion
 
 		#region Simulation
+
 		private Vector2[] getChunkBatch(Vector2 observerChunk)
 		{
 			Vector2[] chunks = new Vector2[9];
@@ -185,10 +234,19 @@ namespace Azura.WaterSim
 
 			return chunks;
 		}
+
 		#endregion
 
 		#region Gizmos
 #if UNITY_EDITOR
+
+		/// <summary>
+		/// Unity's @OnDrawGizmos() base method ; 
+		/// used to draw surface outside of play mode, 
+		/// distance radius around observer, 
+		/// chunk grid and active chunk on play mode,
+		/// surface simulation bounds
+		/// </summary>
 		private void OnDrawGizmos()
 		{
 			drawMesh();
@@ -223,6 +281,10 @@ namespace Azura.WaterSim
 			}
 		}
 
+		/// <summary>
+		/// Draw a single chunk using Unity's gizmos system
+		/// </summary>
+		/// <param name="chunk">lower left corner of chunk</param>
 		private void drawChunk(Vector2 chunk)
 		{
 			chunk *= _chunkSize;
@@ -233,6 +295,10 @@ namespace Azura.WaterSim
 			Gizmos.DrawLine(getVerticePos(new Vector2(chunk.x + _chunkSize, chunk.y + _chunkSize)), getVerticePos(new Vector2(chunk.x, chunk.y + _chunkSize)));
 			Gizmos.DrawLine(getVerticePos(new Vector2(chunk.x, chunk.y + _chunkSize)), getVerticePos(chunk));
 		}
+
+		/// <summary>
+		/// Draw simulation bounds if needed using Unity's gizmos system
+		/// </summary>
 		private void drawBounds()
 		{
 			Gizmos.DrawLine(new Vector3(this.transform.position.x - _bounds, this.transform.position.y, -_bounds), new Vector3(this.transform.position.x + _dimension + _bounds, this.transform.position.y, -_bounds));
@@ -241,6 +307,10 @@ namespace Azura.WaterSim
 			Gizmos.DrawLine(new Vector3(-_bounds, this.transform.position.y, this.transform.position.y + _dimension + _bounds), new Vector3(this.transform.position.x - _bounds, this.transform.position.y, this.transform.position.y - _bounds));
 
 		}
+
+		/// <summary>
+		/// Draw surface mesh's bounds using Unity's gizmos system (useful if the surface has no observer because chunk won't be drawn)
+		/// </summary>
 		private void drawMesh()
 		{
 			Gizmos.color = Color.cyan;
