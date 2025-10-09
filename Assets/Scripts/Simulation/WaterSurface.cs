@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+using Azura.Optimisation;
+
 namespace Azura.WaterSim
 {
 	[RequireComponent(typeof(MeshFilter))]
@@ -19,6 +21,8 @@ namespace Azura.WaterSim
 		[Tooltip("Array of octaves used for simulation, octaves can overlap")]
 		[SerializeField] private WaterOctave[] _octaves = new WaterOctave[] { WaterOctave.Default };
 
+		[Tooltip("Run simulation in fixedUpdate if checked, otherwise runs in update (unchecked by default, useful in very specific case to work with unity's physic system with fixedDeltaTime)")]
+		[SerializeField] private bool _simulateInFixedUpdate = false;
 		/// <summary>
 		/// struct used for perlin noise generation in wave simulation
 		/// </summary>
@@ -129,6 +133,16 @@ namespace Azura.WaterSim
 			return pos;
 		}
 
+		private Vector2[] getChunkBatch(Vector2 observerChunk)
+		{
+			Vector2[] chunks = new Vector2[9];
+
+			for(int x = 0; x < 3; x++)
+				for(int y = 0; y < 3; y++)
+					chunks[x * 3 + y] = new Vector2(observerChunk.x + (x-1), observerChunk.y + (y-1));
+
+			return chunks;
+		}
 		#endregion
 
 		#region Mesh generation functions
@@ -224,15 +238,81 @@ namespace Azura.WaterSim
 
 		#region Simulation
 
-		private Vector2[] getChunkBatch(Vector2 observerChunk)
+		private void simulateVertice(int x, int z, float time, Vector3[] vertices)
 		{
-			Vector2[] chunks = new Vector2[9];
+			float y = 0f;
+			for (int o = 0; o < _octaves.Length; o++)
+			{
+				if (_octaves[o].alternate)
+				{
+					float perl = Mathf.PerlinNoise((x * _octaves[o].scale.x) / _simDimension, (z * _octaves[o].scale.y) / _simDimension) * Mathf.PI * 2f;
+					y += Mathf.Cos(perl + _octaves[o].speed.magnitude * time) * _octaves[o].height;
+				} else
+				{
+					float perl = Mathf.PerlinNoise((x * _octaves[o].scale.x + time * _octaves[o].speed.x) / _simDimension, (z * _octaves[o].scale.y + time * _octaves[o].speed.y) / _simDimension) - 0.5f;
+					y += perl * _octaves[o].height;
+				}
+			}
 
-			for (int x = 0; x < 3; x++)
-				for (int y = 0; y < 3; y++)
-					chunks[x * 3 + y] = new Vector2(observerChunk.x + (x - 1), observerChunk.y + (y - 1));
+			vertices[index(x, z)] = new Vector3(x, y, z);
+		}
 
-			return chunks;
+		private void simulateChunk(float time, Vector2 observerChunk, Vector3[] vertices)
+		{
+			for (int x = (int)(observerChunk.x * _chunkSize); x <= (int)(observerChunk.x * _chunkSize) + _chunkSize; x++)
+				for (int z = (int)(observerChunk.y * _chunkSize); z <= (int)(observerChunk.y * _chunkSize) + _chunkSize; z++)
+				{
+					if (_distanceOptimisation && OptimisationHelpers.FlatSqrdDistance(getVerticePos(new Vector2(x, z)), _observerTransform.position) > (_calculationMaxDistance * _calculationMaxDistance)) continue;
+					simulateVertice(x, z, time, vertices); 
+				}
+		}
+
+		private void simulateSurface(float time, Vector3[] vertices)
+		{
+			for (int x = 0; x <= _dimension; x++)
+				for (int z = 0; z <= _dimension; z++)
+					simulateVertice(x, z, time, vertices);
+		}
+
+		private void simulateChunkBatch(float time, Vector2[] chunks, Vector3[] vertices)
+		{
+			for (int i = 0; i < chunks.Length; i++)
+			{
+				if (chunks[i].x < 0 || chunks[i].x >= _dimension / _chunkSize ||
+					chunks[i].y < 0 || chunks[i].y >= _dimension / _chunkSize) continue;
+				else simulateChunk(time, chunks[i], vertices);
+			}
+		}
+
+		private void simulationUpdate(float time)
+		{
+			Vector3[] vertices = _mesh.vertices;
+
+			if (_observerTransform == null)
+				simulateSurface(time, vertices);
+			else
+			{
+				if (_useBounds) _isSimulating = (_observerTransform.position.x >= this.transform.position.x - (_useBounds ? _bounds : 0) && _observerTransform.transform.position.x <= (this.transform.position.x + _dimension + (_useBounds ? _bounds : 0))) &&
+					(_observerTransform.position.z >= this.transform.position.z - (_useBounds ? _bounds : 0) && _observerTransform.transform.position.z <= (this.transform.position.z + _dimension + (_useBounds ? _bounds : 0)));
+				
+				if (!_isSimulating) return;
+
+				Vector2 observerChunk = getChunk(_observerTransform.position);
+				simulateChunkBatch(time, getChunkBatch(observerChunk), vertices);
+			}
+
+			_mesh.vertices = vertices;
+			_mesh.RecalculateNormals();
+		}
+
+		private void Update()
+		{
+			if(!_simulateInFixedUpdate) simulationUpdate(Time.time);
+		}
+
+		private void FixedUpdate()
+		{
+			if (_simulateInFixedUpdate) simulationUpdate(Time.fixedTime);
 		}
 
 		#endregion
