@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 using Azura.Optimisation;
@@ -85,6 +86,19 @@ namespace Azura.WaterSim
 		{
 			GenerateMesh();
 		}
+
+#if UNITY_EDITOR
+
+		/* For material assignation to mr when component is added */
+		private void Reset()
+		{
+			MeshRenderer mr = GetComponent<MeshRenderer>();
+			Material[] mats = new Material[1];
+			mats[0] = AssetDatabase.LoadAssetAtPath<Material>("Assets/Visual/Materials/WaterDebugMaterial.mat"); //TODO : changer le path
+			mr.materials = mats;
+		}
+
+#endif
 
 		#region Utils functions
 
@@ -186,7 +200,6 @@ namespace Azura.WaterSim
 				for (int z = 0; z <= _dimension; z++)
 					verts[index(x, z)] = new Vector3(x, 0, z);
 
-			Debug.Log(verts.Length);
 			return verts;
 		}
 
