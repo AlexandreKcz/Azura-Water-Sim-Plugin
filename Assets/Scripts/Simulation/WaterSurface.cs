@@ -56,6 +56,9 @@ namespace Azura.WaterSim
 		[Tooltip("UV Scale value of the generated water surface mesh")]
 		[SerializeField] private float _uvScale = 2;
 
+		[Tooltip("Flip UVs scale between each tiles")]
+		[SerializeField] private bool _flipUV = false;
+
 		[Header("Optimisation values")]
 
 		[Tooltip("The transform the surface will use to calculate active chunks, if null : chunk optimisation will be disabled")]
@@ -239,13 +242,20 @@ namespace Azura.WaterSim
 			{
 				for (int z = 0; z < _dimension; z++)
 				{
-					Vector2 vec = new Vector2((x / _uvScale) % 2, (z / _uvScale) % 2);
-					uvs[index(x, z)] = new Vector2(vec.x <= 1 ? vec.x : 2 - vec.x, vec.y <= 1 ? vec.y : 2 - vec.y);
+					if (_flipUV)
+					{
+						Vector2 vec = new Vector2((x / _uvScale) % 2, (z / _uvScale) % 2);
+						uvs[index(x, z)] = new Vector2(vec.x <= 1 ? vec.x : 2 - vec.x, vec.y <= 1 ? vec.y : 2 - vec.y);
+					} else
+					{
+						Vector2 vec = new Vector2((x / _uvScale), (z / _uvScale));
+						uvs[index(x, z)] = new Vector2(vec.x % 1, vec.y % 1);
+					}
 				}
 			}
 
 			return uvs;
-		} //TODO : make flip UV optional
+		}
 
 		#endregion
 

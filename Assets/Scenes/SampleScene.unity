@@ -176,7 +176,8 @@ MonoBehaviour:
     height: 0.1
     alternate: 1
   _simulateInFixedUpdate: 0
-  _uvScale: 0
+  _uvScale: 2
+  _flipUV: 1
   _observerTransform: {fileID: 0}
   _chunkSize: 5
   _distanceOptimisation: 0
