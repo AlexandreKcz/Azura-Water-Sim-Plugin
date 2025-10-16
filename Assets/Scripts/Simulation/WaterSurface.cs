@@ -160,6 +160,39 @@ namespace Azura.WaterSim
 
 			return chunks;
 		}
+
+		public float GetWaveHeight(Vector3 position)
+		{
+			Vector3 scale = new Vector3(1 / transform.lossyScale.x, 0, 1 / transform.lossyScale.z);
+			Vector3 localPos = Vector3.Scale((position - transform.position), scale);
+
+			Vector3[] points = new Vector3[4];
+			for (int i = 0; i < points.Length; i++)
+			{
+				points[i] = new Vector3(Mathf.Floor(localPos.x), 0, Mathf.Floor(localPos.z));
+				points[i].x = Mathf.Clamp(points[i].x, 0, _dimension);
+				points[i].z = Mathf.Clamp(points[i].z, 0, _dimension);
+			}
+
+			float maxDist = Mathf.Max(	Vector3.Distance(points[0], localPos), 
+										Vector3.Distance(points[1], localPos), 
+										Vector3.Distance(points[2], localPos), 
+										Vector3.Distance(points[3], localPos));
+
+			float dist =  ((maxDist - Vector3.Distance(points[0], localPos))
+						 + (maxDist - Vector3.Distance(points[1], localPos))
+						 + (maxDist - Vector3.Distance(points[2], localPos))
+						 + (maxDist - Vector3.Distance(points[3], localPos))
+						 + Mathf.Epsilon);
+
+			float height =		_mesh.vertices[index(points[0].x, points[0].z)].y * (maxDist - Vector3.Distance(points[0], localPos))
+							+	_mesh.vertices[index(points[1].x, points[1].z)].y * (maxDist - Vector3.Distance(points[1], localPos))
+							+	_mesh.vertices[index(points[2].x, points[2].z)].y * (maxDist - Vector3.Distance(points[2], localPos))
+							+	_mesh.vertices[index(points[3].x, points[3].z)].y * (maxDist - Vector3.Distance(points[3], localPos));
+
+			return height * transform.lossyScale.y / dist;
+		}
+
 		#endregion
 
 		#region Mesh generation functions
