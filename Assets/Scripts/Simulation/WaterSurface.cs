@@ -169,7 +169,7 @@ namespace Azura.WaterSim
 			Vector3[] points = new Vector3[4];
 			for (int i = 0; i < points.Length; i++)
 			{
-				points[i] = new Vector3(Mathf.Floor(localPos.x), 0, Mathf.Floor(localPos.z));
+				points[i] = new Vector3(i <= 1 ? Mathf.Floor(localPos.x) : Mathf.Ceil(localPos.x), 0, i == 0 || i == 2 ? Mathf.Floor(localPos.z) : Mathf.Ceil(localPos.z));
 				points[i].x = Mathf.Clamp(points[i].x, 0, _dimension);
 				points[i].z = Mathf.Clamp(points[i].z, 0, _dimension);
 			}

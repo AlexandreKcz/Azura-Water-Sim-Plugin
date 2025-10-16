@@ -44,7 +44,7 @@ namespace Azura.WaterPhysics
             if (det_y > det_z)
                 return new Vector3(xz * yz - xy * zz, det_y, xy * xz - yz * xx).normalized;
             else
-                return new Vector3(xy * yz - xz * yy, xy * xz - yz * xx, det_x).normalized;
+                return new Vector3(xy * yz - xz * yy, xy * xz - yz * xx, det_z).normalized;
         }
     }
 }

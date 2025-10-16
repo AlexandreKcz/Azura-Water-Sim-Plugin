@@ -175,6 +175,10 @@ MonoBehaviour:
     scale: {x: 10, y: 10}
     height: 0.1
     alternate: 1
+  - speed: {x: 0, y: 1}
+    scale: {x: 1.5, y: 2.5}
+    height: 1
+    alternate: 1
   _simulateInFixedUpdate: 0
   _uvScale: 2
   _flipUV: 1

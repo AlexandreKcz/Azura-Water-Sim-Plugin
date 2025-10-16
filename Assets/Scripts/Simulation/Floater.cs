@@ -104,6 +104,7 @@ namespace Azura.WaterPhysics
 
 			Vector3 gravity = Physics.gravity;
 			_rb.drag = _airDrag;
+
 			if(_waterLine > Center.y)
 			{
 				_rb.drag = _waterDrag;
