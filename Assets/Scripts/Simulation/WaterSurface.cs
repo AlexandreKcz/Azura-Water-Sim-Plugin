@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEngine;
 
 using Azura.Optimisation;
+using System.Linq;
 
 namespace Azura.WaterSim
 {
@@ -24,6 +25,10 @@ namespace Azura.WaterSim
 
 		[Tooltip("Run simulation in fixedUpdate if checked, otherwise runs in update (unchecked by default, useful in very specific case to work with unity's physic system with fixedDeltaTime)")]
 		[SerializeField] private bool _simulateInFixedUpdate = false;
+
+		[Tooltip("Reset vertices to position 0 if a chunk is outside of simulation, otherwise simulation is frozen on this chunk. Requires extra computing that has a performance cost, use only to avoid artifacts with frozen waves")]
+		[SerializeField] private bool _resetNonSimulatedChunks = false;
+
 		/// <summary>
 		/// struct used for perlin noise generation in wave simulation
 		/// </summary>
@@ -78,6 +83,8 @@ namespace Azura.WaterSim
 
 		[Tooltip("Bounds distance if useBounds is enabled")]
 		[SerializeField] private float _bounds = 5f;
+
+		private Vector2[] _simulatedChunks;
 
 		public bool IsSimulating { get { return _isSimulating; } }
 		private bool _isSimulating = true;
@@ -340,6 +347,36 @@ namespace Azura.WaterSim
 			}
 		}
 
+		private void resetChunk(Vector2 observerChunk, Vector3[] vertices)
+		{
+			for (int x = (int)(observerChunk.x * _chunkSize); x <= (int)(observerChunk.x * _chunkSize) + _chunkSize; x++)
+				for (int z = (int)(observerChunk.y * _chunkSize); z <= (int)(observerChunk.y * _chunkSize) + _chunkSize; z++)
+				{
+					vertices[index(x, z)].y = 0f;
+				}
+		}
+
+		private void resetChunkBatch(Vector2[] chunks, Vector3[] vertices)
+		{
+			for (int i = 0; i < chunks.Length; i++)
+			{
+				if (chunks[i].x < 0 || chunks[i].x >= _dimension / _chunkSize ||
+					chunks[i].y < 0 || chunks[i].y >= _dimension / _chunkSize) continue;
+				else resetChunk(chunks[i], vertices);
+			}
+		}
+
+		private Vector2[] getOldChunks(Vector2[] currentBatch, Vector2[] oldBatch)
+		{
+			List<Vector2> batch = new List<Vector2>();
+			for(int i = 0; i < oldBatch.Length; i++)
+			{
+				if(!currentBatch.ToList().Contains(oldBatch[i])) batch.Add(oldBatch[i]);
+			}
+
+			return batch.ToArray();
+		}
+
 		private void simulationUpdate	(float time)
 		{
 			Vector3[] vertices = _mesh.vertices;
@@ -355,6 +392,17 @@ namespace Azura.WaterSim
 
 				Vector2 observerChunk = getChunk(_observerTransform.position);
 				simulateChunkBatch(time, getChunkBatch(observerChunk), vertices);
+
+
+				//Chunks Reset
+				if (_resetNonSimulatedChunks)
+				{
+					if (_simulatedChunks == null) _simulatedChunks = getChunkBatch(observerChunk);
+					Vector2[] currentChunks = getChunkBatch(observerChunk);
+					Vector2[] oldChunks = getOldChunks(currentChunks, _simulatedChunks);
+					resetChunkBatch(oldChunks, vertices);
+					_simulatedChunks = getChunkBatch(observerChunk);
+				}
 			}
 
 			_mesh.vertices = vertices;

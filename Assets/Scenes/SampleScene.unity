@@ -180,6 +180,7 @@ MonoBehaviour:
     height: 1
     alternate: 1
   _simulateInFixedUpdate: 0
+  _resetNonSimulatedChunks: 0
   _uvScale: 2
   _flipUV: 1
   _observerTransform: {fileID: 0}
