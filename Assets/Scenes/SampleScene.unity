@@ -613,6 +613,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _surface: {fileID: 35580194}
+  _floatingCenterOffset: 0
   _airDrag: 1
   _waterDrag: 10
   _affectDirection: 1

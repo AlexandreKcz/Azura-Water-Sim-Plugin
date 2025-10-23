@@ -14,6 +14,7 @@ namespace Azura.WaterPhysics
 
 		[Space(5)]
 
+		[SerializeField] private float _floatingCenterOffset = 0f;
 		[SerializeField] private float _airDrag = 1f;
 		[SerializeField] private float _waterDrag = 10f;
 		[SerializeField] private bool _affectDirection = true;
@@ -53,10 +54,10 @@ namespace Azura.WaterPhysics
 			Vector3[] localMidpoints = new Vector3[4];
 			Vector3[] floatingMidPoints = new Vector3[4];
 
-			localMidpoints[0] = _collider.center + new Vector3(halfSize.x, 0, halfSize.z);
-			localMidpoints[1] = _collider.center + new Vector3(-halfSize.x, 0, halfSize.z);
-			localMidpoints[2] = _collider.center + new Vector3(-halfSize.x, 0, -halfSize.z);
-			localMidpoints[3] = _collider.center + new Vector3(halfSize.x, 0, -halfSize.z);
+			localMidpoints[0] = _collider.center + new Vector3(halfSize.x, _floatingCenterOffset, halfSize.z);
+			localMidpoints[1] = _collider.center + new Vector3(-halfSize.x, _floatingCenterOffset, halfSize.z);
+			localMidpoints[2] = _collider.center + new Vector3(-halfSize.x, _floatingCenterOffset, -halfSize.z);
+			localMidpoints[3] = _collider.center + new Vector3(halfSize.x, _floatingCenterOffset, -halfSize.z);
 
 			for (int i = 0; i < 4; i++)
 				floatingMidPoints[i] = _collider.transform.TransformPoint(localMidpoints[i]);
