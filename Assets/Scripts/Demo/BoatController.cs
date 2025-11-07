@@ -37,7 +37,6 @@ namespace Azura.Demo
 
 		private void FixedUpdate()
 		{
-			Debug.Log(_movement);
 
 			Vector3 forceDirection = transform.forward;
 

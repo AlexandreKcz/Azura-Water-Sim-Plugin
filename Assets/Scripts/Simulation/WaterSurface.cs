@@ -168,8 +168,11 @@ namespace Azura.WaterSim
 			return chunks;
 		}
 
+		Vector3[] _verticeCache;
 		public float GetWaveHeight(Vector3 position)
 		{
+			_verticeCache = _mesh.vertices;
+
 			Vector3 scale = new Vector3(1 / transform.lossyScale.x, 0, 1 / transform.lossyScale.z);
 			Vector3 localPos = Vector3.Scale((position - transform.position), scale);
 
@@ -181,21 +184,27 @@ namespace Azura.WaterSim
 				points[i].z = Mathf.Clamp(points[i].z, 0, _dimension);
 			}
 
-			float maxDist = Mathf.Max(	Vector3.Distance(points[0], localPos), 
-										Vector3.Distance(points[1], localPos), 
-										Vector3.Distance(points[2], localPos), 
-										Vector3.Distance(points[3], localPos));
+			float[] distToLocalPos = new float[4];
+			distToLocalPos[0] = Vector3.Distance(points[0], localPos);
+			distToLocalPos[1] = Vector3.Distance(points[1], localPos);
+			distToLocalPos[2] = Vector3.Distance(points[2], localPos);
+			distToLocalPos[3] = Vector3.Distance(points[3], localPos);
 
-			float dist =  ((maxDist - Vector3.Distance(points[0], localPos))
-						 + (maxDist - Vector3.Distance(points[1], localPos))
-						 + (maxDist - Vector3.Distance(points[2], localPos))
-						 + (maxDist - Vector3.Distance(points[3], localPos))
+			float maxDist = Mathf.Max(	distToLocalPos[0],
+										distToLocalPos[1],
+										distToLocalPos[2],
+										distToLocalPos[3]);
+
+			float dist =  ((maxDist - distToLocalPos[0])
+						 + (maxDist - distToLocalPos[1])
+						 + (maxDist - distToLocalPos[2])
+						 + (maxDist - distToLocalPos[3])
 						 + Mathf.Epsilon);
 
-			float height =		_mesh.vertices[index(points[0].x, points[0].z)].y * (maxDist - Vector3.Distance(points[0], localPos))
-							+	_mesh.vertices[index(points[1].x, points[1].z)].y * (maxDist - Vector3.Distance(points[1], localPos))
-							+	_mesh.vertices[index(points[2].x, points[2].z)].y * (maxDist - Vector3.Distance(points[2], localPos))
-							+	_mesh.vertices[index(points[3].x, points[3].z)].y * (maxDist - Vector3.Distance(points[3], localPos));
+			float height =		_verticeCache[index(points[0].x, points[0].z)].y * (maxDist - distToLocalPos[0])
+							+	_verticeCache[index(points[1].x, points[1].z)].y * (maxDist - distToLocalPos[1])
+							+	_verticeCache[index(points[2].x, points[2].z)].y * (maxDist - distToLocalPos[2])
+							+	_verticeCache[index(points[3].x, points[3].z)].y * (maxDist - distToLocalPos[3]);
 
 			return height * transform.lossyScale.y / dist;
 		}

@@ -48,11 +48,14 @@ namespace Azura.WaterPhysics
 			_centerOffset = PhysicsUtils.GetCenterOfPoints(_waterLinePoints) - transform.position;
 		}
 
+		private Vector3[] localMidpoints = new Vector3[4];
+		private Vector3[] floatingMidPoints = new Vector3[4];
+
 		private Vector3[] getColliderFloatingPoints()
 		{
 			Vector3 halfSize = _collider.size * .5f;
-			Vector3[] localMidpoints = new Vector3[4];
-			Vector3[] floatingMidPoints = new Vector3[4];
+			//localMidpoints = new Vector3[4];
+			//floatingMidPoints = new Vector3[4];
 
 			localMidpoints[0] = _collider.center + new Vector3(halfSize.x, _floatingCenterOffset, halfSize.z);
 			localMidpoints[1] = _collider.center + new Vector3(-halfSize.x, _floatingCenterOffset, halfSize.z);
@@ -92,7 +95,9 @@ namespace Azura.WaterPhysics
 			for (int i = 0; i < _floatPoints.Length; i++)
 			{
 				_waterLinePoints[i] = _floatPoints[i];
-				_waterLinePoints[i].y = _surface.GetWaveHeight(_floatPoints[i]);
+				_waterLinePoints[i].y = _surface.GetWaveHeight(_floatPoints[i]); //<- C'EST LUI LE COUPABLE
+				//Debug.Log(Time.deltaTime + " " + _waterLinePoints[i].y);
+				//_waterLinePoints[i].y = 10;
 				newWaterLine += _waterLinePoints[i].y / _floatPoints.Length;
 				if (_waterLinePoints[i].y > _floatPoints[i].y)
 					pointUnderWater = true;
