@@ -46,5 +46,21 @@ namespace Azura.WaterPhysics
             else
                 return new Vector3(xy * yz - xz * yy, xy * xz - yz * xx, det_z).normalized;
         }
+
+        public static void ApplyForceToReachVelocity(Rigidbody rb, Vector3 vel, float force = 1, ForceMode mode = ForceMode.Force)
+        {
+            if (force == 0 || vel.magnitude == 0) return;
+
+            vel = vel + vel.normalized * 0.2f * rb.drag;
+            force = Mathf.Clamp(force, -rb.mass / Time.fixedDeltaTime, rb.mass / Time.fixedDeltaTime);
+
+            if (rb.velocity.magnitude == 0)
+                rb.AddForce(vel * force, mode);
+            else
+            {
+                Vector3 projectedVel = (vel.normalized * Vector3.Dot(vel, rb.velocity) / vel.magnitude);
+                rb.AddForce((vel - projectedVel) * force, mode);
+            }
+        }
     }
 }
